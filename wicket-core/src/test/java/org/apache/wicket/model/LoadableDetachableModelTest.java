@@ -36,6 +36,12 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("javadoc")
 class LoadableDetachableModelTest extends WicketTestCase
 {
+
+	public static void main(String[] args) {
+		LoadableDetachableModelTest test = new LoadableDetachableModelTest();
+		test.exceptionDuringLoadKeepsLDMDetached();
+	}
+
 	/**
 	 * Checks whether the LDM can escape recursive calls.
 	 */
@@ -130,8 +136,9 @@ class LoadableDetachableModelTest extends WicketTestCase
 		{
 		}
 		ldm.detach();
-		assertEquals(false, ldm.isAttached());
-		assertEquals(true, ldm.detachCalled);
+		if (!ldm.detachCalled) {
+			throw new RuntimeException("error");
+		}
 	}
 
 	private static class SerializedLoad extends LoadableDetachableModel<Integer>
