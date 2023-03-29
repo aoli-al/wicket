@@ -46,6 +46,7 @@ import org.apache.wicket.util.lang.Args;
  */
 public class PageProvider implements IPageProvider, IClusterable
 {
+	public static boolean forceResolve = false;
 	private static final long serialVersionUID = 1L;
 
 	private final Integer renderCount;
@@ -157,7 +158,7 @@ public class PageProvider implements IPageProvider, IClusterable
 
 	private Provision getProvision()
 	{
-		if (provision == null)
+		if (provision == null || forceResolve)
 		{
 			provision = new Provision().resolve();
 		}

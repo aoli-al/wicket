@@ -32,11 +32,13 @@ import org.apache.wicket.RestartResponseAtInterceptPageException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.core.request.handler.PageProvider;
+import org.apache.wicket.core.request.handler.RenderPageRequestHandler;
 import org.apache.wicket.core.request.mapper.StalePageException;
 import org.apache.wicket.core.request.mapper.TestMapperContext;
 import org.apache.wicket.markup.IMarkupResourceStreamProvider;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.Url;
@@ -100,9 +102,6 @@ class PageProviderTest extends WicketTestCase
 		int state = 0;
 	}
 
-	/**
-	 * @see <a href="https://issues.apache.org/jira/browse/WICKET-3252">WICKET-3252</a>
-	 * */
 	@Test
 	void testStalePageException()
 	{
@@ -127,8 +126,47 @@ class PageProviderTest extends WicketTestCase
 		{
 			assertTrue(true);
 		}
+	}
+
+
+	/**
+	 * @see <a href="https://issues.apache.org/jira/browse/WICKET-3252">WICKET-3252</a>
+	 * */
+	@Test
+	void testException()
+	{
+		tester.startPage(TestPage.class);
+		TestPage testPage = (TestPage)tester.getLastRenderedPage();
+
+		// cache the link to the first page version
+		String firstHRef = tester.urlFor(testPage.link);
+		tester.clickLink("link");
+		tester.clickLink("stale");
+		tester.clickLink("stale");
+		tester.setExposeExceptions(false);
+		PageProvider.forceResolve = true;
 		tester.getRequest().setURL(firstHRef);
 		tester.processRequest();
+		tester.getRequest().setURL(firstHRef);
+		tester.processRequest();
+		PageProvider.forceResolve = false;
+		assertFalse(testPage.ldm.isAttached());
+
+//		try
+//		{
+//			// just making clear that we are in the tester land
+//			tester.setExposeExceptions(true);
+//			// try to get the old one
+//			tester.getRequest().setURL(firstHRef);
+//			tester.processRequest();
+//			fail("Stale page request process should throw StalePageException");
+//		}
+//		catch (StalePageException e)
+//		{
+//			assertTrue(true);
+//		}
+//		tester.getRequest().setURL(firstHRef);
+//		tester.processRequest();
 	}
 
 	/**
@@ -311,6 +349,7 @@ class PageProviderTest extends WicketTestCase
 				}
 			});
 			add( new Label( "model", ldm ) );
+
 			add(ajaxLink = new AjaxLink<Void>("ajaxLink")
 			{
 				private static final long serialVersionUID = 1L;
@@ -320,6 +359,10 @@ class PageProviderTest extends WicketTestCase
 				{
 				}
 			});
+			add( new ExternalLink( "stale", () -> {
+				var baseUrl = urlFor( new RenderPageRequestHandler( getPage() ) );
+				return baseUrl + "-999.-btn";
+			} ) );
 			add(new Link<Void>("restartIntercept")
 			{
 				private static final long serialVersionUID = 1L;
@@ -346,7 +389,7 @@ class PageProviderTest extends WicketTestCase
 		{
 			return new StringResourceStream(
 				"<html><body><a wicket:id=\"link\"></a><div wicket:id=\"model\"></div><a wicket:id=\"ajaxLink\"></a>"
-					+ "<a wicket:id=\"restartIntercept\"></a></body></html>");
+					+ "<a wicket:id=\"restartIntercept\"></a><div><a href=\"#\" wicket:id=\"stale\">Click me (stale link)!</a></div></body></html>");
 		}
 	}
 
