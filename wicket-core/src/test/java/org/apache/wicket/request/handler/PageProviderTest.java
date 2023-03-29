@@ -36,7 +36,9 @@ import org.apache.wicket.core.request.mapper.StalePageException;
 import org.apache.wicket.core.request.mapper.TestMapperContext;
 import org.apache.wicket.markup.IMarkupResourceStreamProvider;
 import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.Link;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.serialize.java.JavaSerializer;
 import org.apache.wicket.util.resource.IResourceStream;
@@ -125,6 +127,8 @@ class PageProviderTest extends WicketTestCase
 		{
 			assertTrue(true);
 		}
+		tester.getRequest().setURL(firstHRef);
+		tester.processRequest();
 	}
 
 	/**
@@ -272,6 +276,25 @@ class PageProviderTest extends WicketTestCase
 	public static class TestPage extends WebPage implements IMarkupResourceStreamProvider
 	{
 		private static final long serialVersionUID = 1L;
+		private class LDM extends LoadableDetachableModel<String>
+		{
+			public boolean canThrow = true;
+			public LDM() {
+				super();
+			}
+			@Override
+			protected String load()
+			{
+				return "Dummy";
+			}
+
+
+			@Override
+			public void detach() {
+				super.detach();
+			}
+		}
+		private LDM ldm = new LDM();
 		Link<Void> link;
 		AjaxLink<Void> ajaxLink;
 
@@ -287,6 +310,7 @@ class PageProviderTest extends WicketTestCase
 				{
 				}
 			});
+			add( new Label( "model", ldm ) );
 			add(ajaxLink = new AjaxLink<Void>("ajaxLink")
 			{
 				private static final long serialVersionUID = 1L;
@@ -309,11 +333,19 @@ class PageProviderTest extends WicketTestCase
 		}
 
 		@Override
+		protected void onBeforeRender() {
+			if (ldm.isAttached()) {
+				throw new RuntimeException("model still attached!");
+			}
+			super.onBeforeRender();
+		}
+
+		@Override
 		public IResourceStream getMarkupResourceStream(MarkupContainer container,
 			Class<?> containerClass)
 		{
 			return new StringResourceStream(
-				"<html><body><a wicket:id=\"link\"></a><a wicket:id=\"ajaxLink\"></a>"
+				"<html><body><a wicket:id=\"link\"></a><div wicket:id=\"model\"></div><a wicket:id=\"ajaxLink\"></a>"
 					+ "<a wicket:id=\"restartIntercept\"></a></body></html>");
 		}
 	}
