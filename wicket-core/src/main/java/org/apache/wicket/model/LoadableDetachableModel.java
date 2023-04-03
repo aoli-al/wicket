@@ -99,7 +99,7 @@ public abstract class LoadableDetachableModel<T> implements IModel<T>
 	public void detach()
 	{
 		// even if LDM is in partial attached state (ATTACHING) it should be detached
-		if (state != null && state != InternalState.DETACHED)
+		if (state == InternalState.ATTACHED)
 		{
 			try
 			{
