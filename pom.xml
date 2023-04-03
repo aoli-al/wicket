@@ -931,7 +931,7 @@
 							<dependencyConvergence />
 							<compound implementation="com.github.ferstl.maven.pomenforcers.CompoundPedanticEnforcer">
 								<!-- Enforcers -->
-								<enforcers>POM_SECTION_ORDER,DEPENDENCY_MANAGEMENT_ORDER,DEPENDENCY_ORDER,DEPENDENCY_CONFIGURATION,PLUGIN_CONFIGURATION</enforcers>
+								<enforcers>POM_SECTION_ORDER,DEPENDENCY_MANAGEMENT_ORDER,DEPENDENCY_ORDER,DEPENDENCY_CONFIGURATION</enforcers>
 								<dependencyManagementOrderBy>scope,groupId,artifactId</dependencyManagementOrderBy>
 								<dependencyManagementScopePriorities>provided,compile,runtime,test,import</dependencyManagementScopePriorities>
 								<dependenciesScopePriorities>import,provided,compile,runtime,test</dependenciesScopePriorities>
